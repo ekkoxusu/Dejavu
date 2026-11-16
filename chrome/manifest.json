@@ -1,11 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Dejavu",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "录一次，AI 处处复现：捕获 Token、录制网页操作并导出可回放的录制包",
   "side_panel": {
     "default_path": "sidepanel/index.html",
     "open_panel_on_action_click": true
+  },
+  "action": {
+    "default_title": "打开 Dejavu 侧边栏"
   },
   "background": {
     "service_worker": "background/service-worker.js"
