@@ -8,7 +8,6 @@ body {
   padding: 12px;
 }
 
-header h1 { font-size: 15px; margin-bottom: 2px; }
 section { background: #fff; border: 1px solid #d8dee4; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
 
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
