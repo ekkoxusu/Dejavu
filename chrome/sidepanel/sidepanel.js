@@ -3,7 +3,7 @@
 
 const $ = (id) => document.getElementById(id);
 let tokenWatching = false;   // 是否在 token 监控中
-let recordingData = null;    // 最近一次录制会话（进行中或已结束）
+let recordingData = null;    // 进行中的录制会话（侧边栏本地视图，已结束的归档到历史）
 // chrome.tabs.query 直接调用会被安全扫描误判为 SQL 拼接，这里别名调用
 const tabsQuery = chrome.tabs.query.bind(chrome.tabs);
 
@@ -112,10 +112,8 @@ function actionSummary(a) {
   }
 }
 
-function appendActionRow(a) {
-  const list = $('action-list');
-  const empty = list.querySelector('.empty');
-  if (empty) empty.remove();
+// 构建单个动作行（录制区与历史详情共用）
+function buildActionRow(a) {
   const li = document.createElement('li');
   const row = document.createElement('div');
   row.className = 'action-row';
@@ -128,7 +126,14 @@ function appendActionRow(a) {
   desc.title = actionSummary(a);
   row.append(badge, desc);
   li.appendChild(row);
-  list.appendChild(li);
+  return li;
+}
+
+function appendActionRow(a) {
+  const list = $('action-list');
+  const empty = list.querySelector('.empty');
+  if (empty) empty.remove();
+  list.appendChild(buildActionRow(a));
   list.scrollTop = list.scrollHeight; // 自动滚到底部
 }
 
@@ -140,14 +145,11 @@ function updateRecMeta(rec) {
 
 function setRecUI() {
   const btn = $('rec-btn');
-  if (!recordingData) {
-    btn.textContent = '开始监控';
-    btn.classList.remove('active');
-  } else if (recordingData.active) {
-    btn.textContent = '停止并生成 ZIP';
+  if (recordingData && recordingData.active) {
+    btn.textContent = '停止并保存';
     btn.classList.add('active');
   } else {
-    btn.textContent = '生成 ZIP';
+    btn.textContent = '开始监控';
     btn.classList.remove('active');
   }
 }
@@ -168,22 +170,21 @@ function renderRecording(rec) {
   setRecUI();
 }
 
+// 开始一次新录制
+async function startNewRecording() {
+  const tab = await getActiveTab();
+  if (!tab) return;
+  await chrome.runtime.sendMessage({ type: 'rec:start', tabId: tab.id });
+  renderRecording({ active: true, tabId: tab.id, startedAt: Date.now(), startUrl: tab.url, title: tab.title, actions: [], network: [] });
+}
+
 $('rec-btn').onclick = async () => {
-  // 无会话 → 开始
-  if (!recordingData) {
-    const tab = await getActiveTab();
-    if (!tab) return;
-    await chrome.runtime.sendMessage({ type: 'rec:start', tabId: tab.id });
-    renderRecording({ active: true, tabId: tab.id, startedAt: Date.now(), startUrl: tab.url, title: tab.title, actions: [], network: [] });
+  // 进行中 → 停止：后台归档进历史并广播，UI 与 zip 下载由 rec:archived 驱动
+  if (recordingData && recordingData.active) {
+    await chrome.runtime.sendMessage({ type: 'rec:stop' });
     return;
   }
-  // 进行中 → 停止并生成
-  if (recordingData.active) {
-    await chrome.runtime.sendMessage({ type: 'rec:stop' });
-    const res = await chrome.runtime.sendMessage({ type: 'rec:get' });
-    renderRecording(res.recording);
-  }
-  if (recordingData) await generateZip(recordingData);
+  await startNewRecording();
 };
 
 // ---------- zip 生成 ----------
@@ -195,10 +196,10 @@ function b64ToU8(b64) {
   return u8;
 }
 
-async function generateZip(rec) {
-  const btn = $('rec-btn');
-  btn.disabled = true;
-  btn.textContent = '打包中…';
+// 生成并下载 zip；btn 传 null 表示后台自动下载（不占用任何按钮）
+async function generateZip(rec, btn = null, busyText = '打包中…') {
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = busyText; }
   try {
     const shotCount = rec.actions.filter(a => a.screenshot).length;
     const meta = {
@@ -209,7 +210,7 @@ async function generateZip(rec) {
       actionCount: rec.actions.length, networkCount: rec.network.length,
       screenshotCount: shotCount,
       userAgent: navigator.userAgent,
-      generatedBy: 'dejavu 0.1.0', generatedAt: Date.now(),
+      generatedBy: 'dejavu 0.1.1', generatedAt: Date.now(),
       screenshotsDropped: !!rec.screenshotsDropped,
     };
     // actions.json 去掉 base64，替换为截图文件名引用
@@ -234,9 +235,63 @@ async function generateZip(rec) {
   } catch (e) {
     alert('生成 zip 失败：' + (e && e.message || e));
   } finally {
-    btn.disabled = false;
-    setRecUI();
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
   }
+}
+
+// ---------- 录制历史 ----------
+
+// 单条历史：头部（时间 + 摘要）点击展开明细，明细内可重新下载 zip
+function buildHistoryRow(h) {
+  const li = document.createElement('li');
+
+  const head = document.createElement('div');
+  head.className = 'hist-head';
+  const time = document.createElement('span');
+  time.className = 'hist-time';
+  time.textContent = new Date(h.startedAt).toLocaleString('zh-CN', { hour12: false });
+  const title = document.createElement('span');
+  title.className = 'hist-title';
+  title.textContent = `${safeDomain(h.startUrl)} · ${h.actionCount} 步${h.screenshotCount ? ` · ${h.screenshotCount} 图` : ''}`;
+  title.title = h.title || h.startUrl;
+  head.append(time, title);
+
+  // 明细懒加载：首次展开才从后台拉完整数据
+  const detail = document.createElement('div');
+  detail.className = 'hist-detail';
+  detail.hidden = true;
+  head.onclick = async () => {
+    detail.hidden = !detail.hidden;
+    if (detail.hidden || detail.childElementCount) return;
+    const res = await chrome.runtime.sendMessage({ type: 'history:get', id: h.id });
+    const rec = res && res.recording;
+    if (!rec) { detail.textContent = '记录已被淘汰'; return; }
+    const ol = document.createElement('ol');
+    ol.className = 'list';
+    for (const a of rec.actions) ol.appendChild(buildActionRow(a));
+    const btn = document.createElement('button');
+    btn.textContent = '下载 ZIP';
+    btn.onclick = () => generateZip(rec, btn, '下载中…');
+    detail.append(ol, btn);
+  };
+
+  li.append(head, detail);
+  return li;
+}
+
+async function refreshHistory() {
+  const res = await chrome.runtime.sendMessage({ type: 'history:list' });
+  const list = $('history-list');
+  list.textContent = '';
+  const items = (res && res.recordings) || [];
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.className = 'empty';
+    li.textContent = '暂无录制记录';
+    list.appendChild(li);
+    return;
+  }
+  for (const h of items.slice().reverse()) list.appendChild(buildHistoryRow(h)); // 最新在前
 }
 
 // ---------- 消息与初始化 ----------
@@ -250,8 +305,14 @@ chrome.runtime.onMessage.addListener((msg) => {
     recordingData.networkCount = msg.networkCount ?? recordingData.networkCount; // 后台实时网络计数
     appendActionRow(msg.action);
     updateRecMeta(recordingData);
-  } else if (msg.type === 'rec:status' && !msg.active) {
-    if (recordingData) { recordingData.active = false; recordingData.endedAt = Date.now(); updateRecMeta(recordingData); setRecUI(); }
+  } else if (msg.type === 'rec:archived') {
+    // 会话已归档：重置录制区、刷新历史、自动下载该会话的 zip
+    recordingData = null;
+    renderRecording(null);
+    refreshHistory();
+    chrome.runtime.sendMessage({ type: 'history:get', id: msg.id }).then((res) => {
+      if (res && res.recording) generateZip(res.recording);
+    });
   }
 });
 
@@ -265,4 +326,5 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (tk) { setTokenUI(tk.active); if (tk.tokens && tk.tokens.length) renderTokens(tk.tokens); }
   const rc = await chrome.runtime.sendMessage({ type: 'rec:get' });
   if (rc && rc.recording) renderRecording(rc.recording);
+  refreshHistory();
 })();

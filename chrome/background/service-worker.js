@@ -5,6 +5,7 @@
 const TOKEN_HEADERS = ['authorization', 'x-token', 'x-auth-token', 'x-access-token', 'access-token', 'token', 'x-api-key'];
 const MAX_TOKENS = 50;
 const MAX_NETWORK = 500;
+const MAX_HISTORY = 10; // 录制历史保留条数（FIFO 淘汰最旧）
 
 let state = null;          // { tokenWatch: {tabId, tokens[]}|null, recording: {...}|null }
 let statePromise = null;   // 进行中的加载（记忆化，防止并发加载出两个 state 对象）
@@ -48,6 +49,38 @@ function mutate(fn) {
 // 广播给侧边栏（侧边栏可能未打开，忽略错误）
 function broadcast(msg) {
   chrome.runtime.sendMessage(msg).catch(() => {});
+}
+
+// ---------- 录制历史（storage.local，跨浏览器会话保留） ----------
+
+// 归档一条已结束的会话，超过上限淘汰最旧
+async function saveToHistory(rec) {
+  const { recordings = [] } = await chrome.storage.local.get('recordings');
+  recordings.push(rec);
+  while (recordings.length > MAX_HISTORY) recordings.shift();
+  await chrome.storage.local.set({ recordings });
+}
+
+// 历史摘要（不含动作/截图大数组，避免整包传输）
+function historySummary(r) {
+  return {
+    id: r.startedAt, startedAt: r.startedAt, endedAt: r.endedAt,
+    startUrl: r.startUrl, title: r.title,
+    actionCount: r.actions.length, networkCount: r.network.length,
+    screenshotCount: r.actions.filter(a => a.screenshot).length,
+  };
+}
+
+// 结束并归档当前会话：置 inactive → 存历史 → 清空 active 引用 → 广播
+async function archiveRecording(s) {
+  const rec = s.recording;
+  if (!rec) return;
+  rec.active = false;
+  rec.endedAt = Date.now();
+  chrome.tabs.sendMessage(rec.tabId, { type: 'rec:deactivate' }).catch(() => {});
+  await saveToHistory(rec);
+  s.recording = null; // 归档后允许直接开新录制
+  broadcast({ type: 'rec:archived', id: rec.startedAt });
 }
 
 // ---------- webRequest（顶层注册，MV3 SW 重启后仍能被事件唤醒） ----------
@@ -115,14 +148,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   });
 });
 
-// 录制标签页被关闭：结束录制但保留数据（侧边栏仍可生成 zip）
+// 录制标签页被关闭：归档会话（侧边栏从历史中重新下载 zip）
 chrome.tabs.onRemoved.addListener((tabId) => {
   mutate(async (s) => {
-    if (s.recording && s.recording.tabId === tabId) {
-      s.recording.active = false;
-      s.recording.endedAt = Date.now();
-      broadcast({ type: 'rec:status', active: false, reason: 'tab-closed' });
-    }
+    if (s.recording && s.recording.tabId === tabId) await archiveRecording(s);
     if (s.tokenWatch && s.tokenWatch.tabId === tabId) {
       s.tokenWatch = null;
       broadcast({ type: 'token:status', active: false });
@@ -165,15 +194,17 @@ async function handle(msg, sender) {
       });
 
     case 'rec:stop':
-      return mutate((s) => {
-        const rec = s.recording;
-        if (rec) {
-          rec.active = false;
-          rec.endedAt = Date.now();
-          chrome.tabs.sendMessage(rec.tabId, { type: 'rec:deactivate' }).catch(() => {});
-        }
-        return { ok: true };
-      });
+      return mutate((s) => archiveRecording(s).then(() => ({ ok: true })));
+
+    case 'history:list': {
+      const { recordings = [] } = await chrome.storage.local.get('recordings');
+      return { recordings: recordings.map(historySummary) };
+    }
+
+    case 'history:get': {
+      const { recordings = [] } = await chrome.storage.local.get('recordings');
+      return { recording: recordings.find(r => r.startedAt === msg.id) || null };
+    }
 
     case 'rec:get': {
       const s = await getState();

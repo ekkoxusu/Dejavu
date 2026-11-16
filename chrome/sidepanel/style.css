@@ -38,4 +38,12 @@ button:disabled { opacity: 0.5; cursor: default; }
 
 .meta { color: #6e7781; font-size: 12px; margin-bottom: 4px; }
 
+/* 录制历史 */
+#history-list { max-height: 320px; }
+.hist-head { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+.hist-time { color: #6e7781; font-size: 11px; flex-shrink: 0; }
+.hist-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-detail { margin-top: 6px; padding: 8px; background: #f6f8fa; border-radius: 6px; }
+.hist-detail .list { max-height: 180px; margin-bottom: 6px; }
+
 .empty { color: #6e7781; font-size: 12px; }

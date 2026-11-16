@@ -25,9 +25,17 @@
       <h2>操作录制</h2>
       <button id="rec-btn" class="primary">开始监控</button>
     </div>
-    <p class="hint">录制当前标签页的点击 / 输入 / 跳转，停止后导出录制包，配合通用回放 Skill 使用</p>
+    <p class="hint">录制当前标签页的点击 / 输入 / 跳转，停止后自动归档并下载录制包</p>
     <div id="rec-meta" class="meta"></div>
     <ol id="action-list" class="list"></ol>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>录制历史</h2>
+    </div>
+    <p class="hint">最近 10 次录制，点击条目展开明细，可重新下载 zip</p>
+    <ul id="history-list" class="list"></ul>
   </section>
 
   <script src="../lib/fflate.min.js"></script>
