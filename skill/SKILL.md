@@ -25,6 +25,7 @@ zip 文件名形如 `recording-<域名>-<时间戳>.zip`，结构：
 | type | 含义 | 关键字段 | 回放动作 |
 |---|---|---|---|
 | navigate | 页面加载完成 | `title` | 打开 `url`；若域名与当前页相同，可能是 SPA 路由跳转，改用页面内导航 |
+| tab | 切换标签页 | `title` | 用户切换到了另一个标签页（手动切换或 `window.open` 等）；后续动作在新页面上执行，回放时同样切换到新标签页/新窗口后继续 |
 | click | 点击 | `element` | 点击 `element.selector` 指向的元素 |
 | input | 输入/勾选 | `element`、`value` | 文本框填入 `value`；`element.type=checkbox` 时 `value` 为 `"true"/"false"` 表示勾选/取消；select 按 `value` 选项 |
 | keypress | 按键 | `key` | 目前只有 `Enter` |
@@ -40,7 +41,7 @@ zip 文件名形如 `recording-<域名>-<时间戳>.zip`，结构：
 
 ### network.json
 
-数组，每项：`id`、`method`、`url`、`type`、`status`（可能缺失）、`ts`、`auth`（token 已掩码）。它是录制期间该标签页的请求基线，不是回放指令。
+数组，每项：`id`、`method`、`url`、`type`、`status`（可能缺失）、`ts`、`auth`（token 已掩码）。它是录制期间用户所操作标签页（含跟随切换后的标签页）的请求基线，不是回放指令。
 
 ### metadata.json
 

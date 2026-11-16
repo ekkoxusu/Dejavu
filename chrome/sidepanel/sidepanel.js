@@ -102,7 +102,7 @@ $('token-btn').onclick = async () => {
 function actionSummary(a) {
   const el = a.element || {};
   switch (a.type) {
-    case 'navigate': return `${a.title ? a.title + ' — ' : ''}${a.url}`;
+    case 'navigate': case 'tab': return `${a.title ? a.title + ' — ' : ''}${a.url}`;
     case 'click': return el.text ? `「${el.text}」 ${el.selector || ''}` : (el.selector || '');
     case 'input': return `${el.selector || ''} = ${a.value ?? ''}`;
     case 'keypress': return `按 ${a.key}`;
@@ -210,7 +210,7 @@ async function generateZip(rec, btn = null, busyText = '打包中…') {
       actionCount: rec.actions.length, networkCount: rec.network.length,
       screenshotCount: shotCount,
       userAgent: navigator.userAgent,
-      generatedBy: 'dejavu 0.1.1', generatedAt: Date.now(),
+      generatedBy: 'dejavu 0.3.0', generatedAt: Date.now(),
       screenshotsDropped: !!rec.screenshotsDropped,
     };
     // actions.json 去掉 base64，替换为截图文件名引用
@@ -316,12 +316,19 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
+// 顶部「当前标签页」标签：随标签页激活实时更新（录制焦点也随之迁移）
+function setTabLabel(tab) {
+  if (!tab) return;
+  const label = tab.title ? tab.title.slice(0, 30) + (tab.title.length > 30 ? '…' : '') : safeDomain(tab.url || '');
+  $('tab-label').textContent = `当前标签页：${label}`;
+}
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  setTabLabel(await chrome.tabs.get(tabId).catch(() => null));
+});
+
 (async function init() {
-  const tab = await getActiveTab();
-  if (tab) {
-    const label = tab.title ? tab.title.slice(0, 30) + (tab.title.length > 30 ? '…' : '') : safeDomain(tab.url || '');
-    $('tab-label').textContent = `当前标签页：${label}`;
-  }
+  setTabLabel(await getActiveTab());
   const tk = await chrome.runtime.sendMessage({ type: 'token:get' });
   if (tk) { setTokenUI(tk.active); if (tk.tokens && tk.tokens.length) renderTokens(tk.tokens); }
   const rc = await chrome.runtime.sendMessage({ type: 'rec:get' });

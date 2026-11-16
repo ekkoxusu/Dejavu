@@ -172,10 +172,26 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   });
 });
 
-// 录制标签页被关闭：归档会话（侧边栏从历史中重新下载 zip）
+// 录制跟随标签页激活：用户切换标签页 / window.open 新页面时，把录制焦点移过去
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  mutate(async (s) => {
+    const rec = s.recording;
+    if (!rec || !rec.active || rec.tabId === tabId) return;
+    chrome.tabs.sendMessage(rec.tabId, { type: 'rec:deactivate' }).catch(() => {}); // 旧标签页停止监听
+    rec.tabId = tabId;
+    const tab = await chrome.tabs.get(tabId);
+    rec.actions.push({
+      seq: rec.actions.length, type: 'tab', ts: Date.now(),
+      url: tab.url, title: tab.title || undefined,
+    });
+    broadcast({ type: 'rec:update', action: rec.actions[rec.actions.length - 1], networkCount: rec.network.length });
+    chrome.tabs.sendMessage(tabId, { type: 'rec:activate' }).catch(() => {}); // chrome:// 等页面无内容脚本
+  });
+});
+
+// 标签页关闭：Chrome 会自动激活相邻标签页，录制由 onActivated 跟随迁移，这里只清理 token 监控
 chrome.tabs.onRemoved.addListener((tabId) => {
   mutate(async (s) => {
-    if (s.recording && s.recording.tabId === tabId) await archiveRecording(s);
     if (s.tokenWatch && s.tokenWatch.tabId === tabId) {
       s.tokenWatch = null;
       broadcast({ type: 'token:status', active: false });

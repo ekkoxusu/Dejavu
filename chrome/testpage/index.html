@@ -36,7 +36,8 @@
       <div><label><input type="checkbox" name="agree"> 同意条款</label></div>
       <button type="submit" data-testid="submit-btn">提交</button>
     </form>
-    <p><a href="#section-bottom" id="nav-link">跳到底部锚点</a>（测试 navigate 记录）</p>
+    <p><a href="#section-bottom" id="nav-link">跳到底部锚点</a>（测试 navigate 记录）
+      <button id="open-new" data-testid="open-new-btn">window.open 新标签页</button>（测试跨标签页跟随）</p>
   </fieldset>
 
   <p id="section-bottom" style="margin-top: 400px">— 页面底部 —</p>
@@ -52,6 +53,7 @@
       fetch(location.href, { headers: { 'x-token': 'xtok-987654321-fedcba' } })
         .then(() => {}, () => {});
     };
+    document.getElementById('open-new').onclick = () => window.open(location.href, '_blank');
     document.getElementById('demo-form').addEventListener('submit', (e) => e.preventDefault());
   </script>
 </body>
