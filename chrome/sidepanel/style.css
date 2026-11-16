@@ -1,0 +1,41 @@
+/* 简洁紧凑的侧边栏样式 */
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  font: 13px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #1f2328;
+  background: #f6f8fa;
+  padding: 12px;
+}
+
+header h1 { font-size: 15px; margin-bottom: 2px; }
+section { background: #fff; border: 1px solid #d8dee4; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.section-head h2 { font-size: 13px; }
+
+.hint { color: #6e7781; font-size: 12px; margin-bottom: 6px; }
+
+button {
+  font: inherit; padding: 4px 12px; border-radius: 6px;
+  border: 1px solid #d0d7de; background: #f6f8fa; cursor: pointer;
+}
+button.primary { background: #0969da; border-color: #0969da; color: #fff; }
+button.primary.active { background: #cf222e; border-color: #cf222e; }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.list { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+#action-list { max-height: 260px; }
+.list li { border-top: 1px solid #eaeef2; padding: 6px 0; }
+
+.token-row { display: flex; align-items: center; gap: 6px; }
+.token-row code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.token-meta { color: #6e7781; font-size: 11px; margin-top: 2px; }
+
+.action-row { display: flex; gap: 6px; align-items: baseline; }
+.badge { flex-shrink: 0; font-size: 11px; color: #0969da; background: #ddf4ff; border-radius: 4px; padding: 0 5px; }
+.action-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.meta { color: #6e7781; font-size: 12px; margin-bottom: 4px; }
+
+.empty { color: #6e7781; font-size: 12px; }

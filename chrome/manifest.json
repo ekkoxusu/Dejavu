@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Dejavu",
+  "version": "0.1.0",
+  "description": "录一次，AI 处处复现：捕获 Token、录制网页操作并导出可回放的录制包",
+  "side_panel": {
+    "default_path": "sidepanel/index.html",
+    "open_panel_on_action_click": true
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "permissions": ["sidePanel", "webRequest", "storage", "scripting", "tabs", "downloads"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/recorder.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

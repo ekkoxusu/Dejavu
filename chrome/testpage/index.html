@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Dejavu 测试页</title>
+  <style>
+    body { font: 14px/1.6 -apple-system, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    fieldset { border: 1px solid #ccc; border-radius: 8px; margin-bottom: 20px; }
+    input, select, button { font: inherit; margin: 4px 0; }
+    #result { color: #666; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Dejavu 测试页</h1>
+  <p>用 <code>python3 -m http.server 8765</code> 在本目录启动后访问本页。</p>
+
+  <fieldset>
+    <legend>1. Token 捕获测试</legend>
+    <p>先在侧边栏点「获取 Token」，再点下面按钮（会带 Authorization 头请求本页，404 没关系，请求头仍会被捕获）：</p>
+    <button id="send-token" data-testid="send-token-btn">发送带 Token 的请求</button>
+    <button id="send-token2">再发一个 x-token</button>
+    <p id="result"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. 操作录制测试</legend>
+    <form id="demo-form">
+      <div><input name="username" placeholder="用户名" data-testid="username-input"></div>
+      <div><input type="password" name="password" placeholder="密码（录制时会掩码）"></div>
+      <div>
+        <select name="city">
+          <option value="bj">北京</option>
+          <option value="sh">上海</option>
+        </select>
+      </div>
+      <div><label><input type="checkbox" name="agree"> 同意条款</label></div>
+      <button type="submit" data-testid="submit-btn">提交</button>
+    </form>
+    <p><a href="#section-bottom" id="nav-link">跳到底部锚点</a>（测试 navigate 记录）</p>
+  </fieldset>
+
+  <p id="section-bottom" style="margin-top: 400px">— 页面底部 —</p>
+
+  <script>
+    // 触发带 token 的请求：同源 404 即可，onSendHeaders 仍能捕获请求头
+    document.getElementById('send-token').onclick = () => {
+      fetch(location.href, { headers: { Authorization: 'Bearer test-token-abc123def456' } })
+        .then(() => {}, () => {});
+      document.getElementById('result').textContent = '已发送 Authorization: Bearer test-token-…';
+    };
+    document.getElementById('send-token2').onclick = () => {
+      fetch(location.href, { headers: { 'x-token': 'xtok-987654321-fedcba' } })
+        .then(() => {}, () => {});
+    };
+    document.getElementById('demo-form').addEventListener('submit', (e) => e.preventDefault());
+  </script>
+</body>
+</html>

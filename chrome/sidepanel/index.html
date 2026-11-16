@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Dejavu</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Dejavu</h1>
+    <p class="hint" id="tab-label"></p>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Token 捕获</h2>
+      <button id="token-btn" class="primary">获取 Token</button>
+    </div>
+    <p class="hint">点击后开始监控当前标签页请求头，去操作（如登录）即可捕获</p>
+    <ul id="token-list" class="list"></ul>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>操作录制</h2>
+      <button id="rec-btn" class="primary">开始监控</button>
+    </div>
+    <p class="hint">录制当前标签页的点击 / 输入 / 跳转，停止后导出录制包，配合通用回放 Skill 使用</p>
+    <div id="rec-meta" class="meta"></div>
+    <ol id="action-list" class="list"></ol>
+  </section>
+
+  <script src="../lib/fflate.min.js"></script>
+  <script src="sidepanel.js"></script>
+</body></html>
