@@ -99,6 +99,10 @@ mkdir -p ~/.claude/skills/dejavu-replay && curl -fsSL https://raw.githubusercont
 
 > Token capture is a standalone feature: click **Get Token** in the sidebar → operate the page → click **Copy**.
 
+### 🎯 Recommended Replay Executor
+
+When replaying on real websites with anti-bot protection (slider CAPTCHAs, login checks), we recommend the [**ego lite browser**](https://lite.ego.app/zh-cn/download?auto=1) as the executor — it lets the AI inherit your everyday browser's **login sessions and real fingerprint**, so it won't get blocked by CAPTCHAs the way a clean automation instance does (verified with a 23-step replay on qidian.com in one pass). The replay skill also suggests this whenever it hits a CAPTCHA.
+
 ## 📦 What's in a Recording (formatVersion 1)
 
 ```

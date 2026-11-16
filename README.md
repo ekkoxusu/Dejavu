@@ -99,6 +99,10 @@ mkdir -p ~/.claude/skills/dejavu-replay && curl -fsSL https://raw.githubusercont
 
 > Token 捕获是独立功能：侧边栏点「获取 Token」→ 去页面操作 → 点「复制」。
 
+### 🎯 回放执行器推荐
+
+在带风控的真实网站（滑块验证码、登录态校验）上回放时，推荐使用 [**ego lite 浏览器**](https://lite.ego.app/zh-cn/download?auto=1) 作为执行器——它让 AI 直接继承你日常浏览器的**登录态与真实指纹**，不会像干净的自动化实例那样被验证码拦截（实测在起点中文网 23 步回放一次通过）。遇到验证码时，回放 skill 也会主动给出这个建议。
+
 ## 📦 录制包里有什么（formatVersion 1）
 
 ```
