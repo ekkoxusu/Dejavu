@@ -17,13 +17,16 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 chrome.action.onClicked.addListener(async (tab) => {
-  if (panelWindows.has(tab.windowId)) {
-    // 已打开 → 关闭：Chrome 未提供 close API，用「禁用再启用该窗口面板」使其收起
-    await chrome.sidePanel.setOptions({ windowId: tab.windowId, enabled: false });
-    await chrome.sidePanel.setOptions({ windowId: tab.windowId, enabled: true });
-  } else {
-    await chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
-  }
+  try {
+    if (panelWindows.has(tab.windowId)) {
+      // 已打开 → 关闭：Chrome 未提供 close API，用「禁用再启用该标签页面板」使其收起
+      // 注意 setOptions 只接受 tabId（open 才支持 windowId）
+      await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false });
+      await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: true });
+    } else {
+      await chrome.sidePanel.open({ windowId: tab.windowId });
+    }
+  } catch (e) { /* 个别环境不支持禁用收起，保持面板原状 */ }
 });
 
 const TOKEN_HEADERS = ['authorization', 'x-token', 'x-auth-token', 'x-access-token', 'access-token', 'token', 'x-api-key'];
@@ -179,7 +182,8 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
     if (!rec || !rec.active || rec.tabId === tabId) return;
     chrome.tabs.sendMessage(rec.tabId, { type: 'rec:deactivate' }).catch(() => {}); // 旧标签页停止监听
     rec.tabId = tabId;
-    const tab = await chrome.tabs.get(tabId);
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (!tab) return; // 标签页瞬时关闭等场景
     rec.actions.push({
       seq: rec.actions.length, type: 'tab', ts: Date.now(),
       url: tab.url, title: tab.title || undefined,

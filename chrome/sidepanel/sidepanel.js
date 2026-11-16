@@ -312,7 +312,7 @@ chrome.runtime.onMessage.addListener((msg) => {
     refreshHistory();
     chrome.runtime.sendMessage({ type: 'history:get', id: msg.id }).then((res) => {
       if (res && res.recording) generateZip(res.recording);
-    });
+    }).catch(() => {});
   }
 });
 
@@ -339,7 +339,9 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 // 与后台保持长连接报告面板存活（点击图标时后台据此决定开还是关）
 function connectPanel() {
   const port = chrome.runtime.connect({ name: 'sidepanel' });
-  chrome.windows.getCurrent().then((w) => port.postMessage({ windowId: w.id }));
   port.onDisconnect.addListener(connectPanel); // SW 重启后自动重连
+  chrome.windows.getCurrent().then((w) => {
+    try { port.postMessage({ windowId: w.id }); } catch (e) { /* port 已断，onDisconnect 已触发重连 */ }
+  });
 }
 connectPanel();
