@@ -2,6 +2,11 @@
 // 状态存 chrome.storage.session（SW 可能被杀，重启后从存储恢复）；
 // 所有修改走串行队列，避免并发读改写丢失数据。
 
+// 点击工具栏图标直接打开侧边栏（onClicked 回调自带用户手势，满足 sidePanel.open 的要求）
+chrome.action.onClicked.addListener((tab) => {
+  chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+});
+
 const TOKEN_HEADERS = ['authorization', 'x-token', 'x-auth-token', 'x-access-token', 'access-token', 'token', 'x-api-key'];
 const MAX_TOKENS = 50;
 const MAX_NETWORK = 500;
