@@ -58,7 +58,8 @@
       tag,
       selector,
       role: el.getAttribute('role'),
-      text: (el.innerText || el.value || '').trim().slice(0, 80) || undefined,
+      // password 输入框的 value 绝不能进入 text（掩码只在 action.value 层，text 兜底曾泄漏明文）
+      text: el.type === 'password' ? undefined : (el.innerText || el.value || '').trim().slice(0, 80) || undefined,
       testid: testid || undefined,
       aria: aria || undefined,
       name: name || undefined,
