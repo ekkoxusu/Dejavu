@@ -2,9 +2,28 @@
 // 状态存 chrome.storage.session（SW 可能被杀，重启后从存储恢复）；
 // 所有修改走串行队列，避免并发读改写丢失数据。
 
-// 点击工具栏图标直接打开侧边栏（onClicked 回调自带用户手势，满足 sidePanel.open 的要求）
-chrome.action.onClicked.addListener((tab) => {
-  chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+// ---------- 侧边栏开关（点击图标：未开则开，已开则关） ----------
+
+// 通过长连接跟踪各窗口侧边栏是否打开：面板页面加载时连接并上报 windowId，面板关闭时端口自动断开
+const panelWindows = new Set();
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== 'sidepanel') return;
+  port.onMessage.addListener((msg) => {
+    if (msg.windowId == null) return;
+    panelWindows.add(msg.windowId);
+    port.onDisconnect.addListener(() => panelWindows.delete(msg.windowId));
+  });
+});
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (panelWindows.has(tab.windowId)) {
+    // 已打开 → 关闭：Chrome 未提供 close API，用「禁用再启用该窗口面板」使其收起
+    await chrome.sidePanel.setOptions({ windowId: tab.windowId, enabled: false });
+    await chrome.sidePanel.setOptions({ windowId: tab.windowId, enabled: true });
+  } else {
+    await chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+  }
 });
 
 const TOKEN_HEADERS = ['authorization', 'x-token', 'x-auth-token', 'x-access-token', 'access-token', 'token', 'x-api-key'];

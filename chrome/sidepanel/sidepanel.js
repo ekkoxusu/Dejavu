@@ -328,3 +328,11 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (rc && rc.recording) renderRecording(rc.recording);
   refreshHistory();
 })();
+
+// 与后台保持长连接报告面板存活（点击图标时后台据此决定开还是关）
+function connectPanel() {
+  const port = chrome.runtime.connect({ name: 'sidepanel' });
+  chrome.windows.getCurrent().then((w) => port.postMessage({ windowId: w.id }));
+  port.onDisconnect.addListener(connectPanel); // SW 重启后自动重连
+}
+connectPanel();
