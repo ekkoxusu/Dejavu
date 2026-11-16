@@ -29,6 +29,23 @@ You operate the browser ──► Dejavu records ──► recording-*.zip ─�
        (once)           (actions/shots/network)  (standard package)     (countless times)
 ```
 
+## ⚡ Dejavu vs Chrome DevTools Recorder
+
+In one sentence: **Recorder produces automation scripts for engineers; Dejavu produces operation data packages for AI** — the former ends at code, the latter ends with an Agent doing the work for you.
+
+| Dimension | Chrome DevTools Recorder | Dejavu |
+|---|---|---|
+| Usage | F12 → Recorder panel, developer-oriented | Click the icon, one click start/stop |
+| Output | User flow → exported Puppeteer/Playwright scripts | `recording-*.zip`: actions + network + per-step screenshots |
+| Consumer | Engineers writing tests/CI | Any AI Agent with the universal skill — zero code |
+| Replay behavior | **Scripts are rigid — any UI change breaks them** (a human must fix) | **AI adapts**: graceful selector fallback, dynamic recovery when the page changes |
+| Token capture | ❌ | ✅ One-click request-header monitoring + copy |
+| Per-step screenshots | ❌ steps list only | ✅ one JPEG per action for frame-by-frame comparison |
+| Network baseline | ❌ export HAR yourself | ✅ network.json bundled (tokens redacted) |
+| Password handling | Recorded in plain text, delete steps manually | Auto-masked as `***` |
+
+> Recorder remains a great starting point for CI test scripts; Dejavu aims to let **non-programmers** hand their workflows to AI for replay.
+
 ## ✨ Features
 
 - **🔎 Token Capture** — One-click request-header monitoring. Log in as usual and `Authorization` / `x-token` headers are captured automatically; copy with one click
@@ -36,6 +53,7 @@ You operate the browser ──► Dejavu records ──► recording-*.zip ─�
 - **📸 Per-Step Screenshots** — Every action carries a screenshot of that exact moment, so the AI can compare page state frame by frame during replay
 - **🌐 Network Baseline** — A summary of all requests during recording, letting the AI verify results or call APIs directly, skipping the UI
 - **♻️ Universal Replay Skill** — Replay logic ships as a standalone, standard Agent Skill: install once, replay every recording, on any platform
+- **🧠 Adaptive AI Replay** — A recording captures intent, not a dead script: selectors degrade gracefully (testid → id → aria → CSS → text), and the AI dynamically reroutes when the page structure changes (in a real test, filling a select by recorded value failed — the AI recovered by matching the option text instead)
 - **🔒 Local-First** — All data stays on your machine; nothing is uploaded. Passwords are masked, tokens are redacted in network logs
 
 ## 🚀 Quick Start
