@@ -12,6 +12,10 @@
 
 A Chrome extension + a universal AI Skill: record any web operation into a standard data package, then hand it to any AI Agent for faithful replay.
 
+<img src="docs/demo.gif" alt="Dejavu demo: AI replays a recorded GitHub flow and stars the repo" width="720" />
+
+> ⬆️ Live recording: an AI replays the user's GitHub flow from a recording package (open repo → Profile → pinned repo → hit Star)
+
 **If Dejavu helps you, please give it a ⭐ Star on [GitHub](https://github.com/ekkoxusu/Dejavu) — it's the best way to support the project!**
 
 </div>

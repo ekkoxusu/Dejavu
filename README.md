@@ -12,6 +12,10 @@
 
 一个 Chrome 扩展 + 一个通用 AI Skill：把你在网页上的任何操作录制成标准数据包，交给任意 AI Agent 完整复现。
 
+<img src="docs/demo.gif" alt="Dejavu 演示：AI 回放录制的 GitHub 操作，点亮 Star" width="720" />
+
+> ⬆️ 实录：AI 依据录制包回放用户在 GitHub 上的操作（打开仓库 → Profile → pinned 仓库 → 点亮 Star）
+
 **如果 Dejavu 帮到了你，欢迎去 [GitHub](https://github.com/ekkoxusu/Dejavu) 点一个 ⭐ Star —— 这是对项目最好的支持！**
 
 </div>
