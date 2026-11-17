@@ -9,6 +9,7 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop)
 [![Recording Format](https://img.shields.io/badge/recording%20format-v1-8A2BE2)](skill/SKILL.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![LINUX DO](https://img.shields.io/badge/LINUX_DO-Community-00AEEC)](https://linux.do)
 
 A Chrome extension + a universal AI Skill: record any web operation into a standard data package, then hand it to any AI Agent for faithful replay.
 

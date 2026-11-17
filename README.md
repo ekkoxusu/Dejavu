@@ -9,6 +9,7 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop)
 [![Recording Format](https://img.shields.io/badge/recording%20format-v1-8A2BE2)](skill/SKILL.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![LINUX DO](https://img.shields.io/badge/LINUX_DO-%E7%A4%BE%E5%8C%BA-00AEEC)](https://linux.do)
 
 一个 Chrome 扩展 + 一个通用 AI Skill：把你在网页上的任何操作录制成标准数据包，交给任意 AI Agent 完整复现。
 
